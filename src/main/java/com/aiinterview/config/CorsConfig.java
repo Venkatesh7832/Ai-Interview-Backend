@@ -17,8 +17,8 @@ public class CorsConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of(
-            "http://localhost:5173",
-            "https://ai-interview-frontend-ga9f.onrender.com"
+                "http://localhost:5173",
+                "https://ai-interview-frontend-ga9f.onrender.com"
         ));
 
         config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
@@ -33,7 +33,6 @@ public class CorsConfig {
         return new CorsFilter(source);
     }
 }
-
 
 
 
