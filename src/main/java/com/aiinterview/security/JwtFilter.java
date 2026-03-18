@@ -46,40 +46,47 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+        String path = request.getServletPath();
+
+        // ✅ VERY IMPORTANT: skip auth endpoints
+        if (path.startsWith("/api/auth")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
 
-            String jwt = parseJwt(request);
+            String headerAuth = request.getHeader("Authorization");
 
-            if (jwt != null && jwtUtil.isTokenValid(jwt)) {
+            if (headerAuth != null && headerAuth.startsWith("Bearer ")) {
 
-                String email = jwtUtil.extractEmail(jwt);
+                String token = headerAuth.substring(7);
 
-                UserDetails userDetails =
-                        userDetailsService.loadUserByUsername(email);
+                if (jwtUtil.isTokenValid(token)) {
 
-                if (jwtUtil.validateToken(jwt, userDetails)) {
+                    String email = jwtUtil.extractEmail(token);
 
-                    UsernamePasswordAuthenticationToken auth =
+                    UserDetails userDetails =
+                            userDetailsService.loadUserByUsername(email);
+
+                    UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(
                                     userDetails,
                                     null,
-                                    userDetails.getAuthorities());
+                                    userDetails.getAuthorities()
+                            );
 
-                    auth.setDetails(
-                            new WebAuthenticationDetailsSource()
-                                    .buildDetails(request));
-
-                    SecurityContextHolder.getContext().setAuthentication(auth);
+                    SecurityContextHolder.getContext()
+                            .setAuthentication(authToken);
                 }
             }
 
         } catch (Exception e) {
-            log.error("JWT authentication failed: {}", e.getMessage());
+            e.printStackTrace();
         }
 
         filterChain.doFilter(request, response);
     }
-
     private String parseJwt(HttpServletRequest request) {
 
         String headerAuth = request.getHeader("Authorization");
